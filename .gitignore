@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+venv/
+env/
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build outputs
+dist/
+build/
+*.log
+*.pid
+*.seed
+*.pid.lock
+
+# Testing
+coverage/
+.nyc_output/
+.pytest_cache/
+
+# Credentials
+*.key
+*.pem
+credentials.json
+token.json
+
+# Temporary files
+tmp/
+temp/
+*.tmp
