@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { parseNaturalLanguage } from "@/lib/parseInput";
 import { generateProblems } from "@/lib/generateProblems";
+import { loadCsvVocabulary } from "@/lib/loadCsvData";
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,13 +14,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 1. 자연어 파싱 → 검색 조건
+    // 1. CSV 데이터 로드
+    const csvData = loadCsvVocabulary();
+
+    // 2. 자연어 파싱 → 검색 조건
     const criteria = parseNaturalLanguage(input);
 
-    // 2. 조건에 맞는 문제 생성
-    const problems = generateProblems(criteria);
+    // 3. 조건에 맞는 문제 생성 (CSV 데이터 우선 사용)
+    const problems = generateProblems(criteria, csvData);
 
-    return NextResponse.json({ criteria, problems });
+    return NextResponse.json({
+      criteria,
+      problems,
+      dataSource: csvData.length > 0 ? `CSV (${csvData.length}개 어휘)` : "샘플 데이터",
+    });
   } catch (error) {
     console.error("문제 생성 오류:", error);
     return NextResponse.json(

@@ -14,6 +14,41 @@ function uid() {
   return Math.random().toString(36).substring(2, 10);
 }
 
+// 학년 수준이 grade_range에 포함되는지 확인
+// 예: vocabularyLevel="초등5", curriculumGrade="초3-초6" → true
+function matchesGradeRange(vocabularyLevel: string, curriculumGrade: string): boolean {
+  // 정확히 일치
+  if (curriculumGrade === vocabularyLevel) return true;
+
+  // _grades 확장 필드가 있으면 사용
+  const item = curriculumGrade as string;
+
+  // "초3-초6" 같은 범위 형식 파싱
+  const rangeMatch = item.match(/(초|중|고)(\d)\s*-\s*(?:초|중|고)(\d)/);
+  if (rangeMatch) {
+    const prefix = rangeMatch[1];
+    const start = parseInt(rangeMatch[2]);
+    const end = parseInt(rangeMatch[3]);
+
+    // vocabularyLevel에서 접두사와 숫자 추출
+    const levelMatch = vocabularyLevel.match(/(초등?|중|고)(\d)/);
+    if (levelMatch) {
+      const levelPrefix = levelMatch[1].startsWith("초") ? "초" : levelMatch[1];
+      const levelNum = parseInt(levelMatch[2]);
+      if (levelPrefix === prefix && levelNum >= start && levelNum <= end) {
+        return true;
+      }
+    }
+  }
+
+  // "초등" 키워드 포함 여부
+  if (vocabularyLevel.startsWith("초등") && curriculumGrade.includes("초")) return true;
+  if (vocabularyLevel.startsWith("중") && curriculumGrade.includes("중")) return true;
+  if (vocabularyLevel.startsWith("고") && curriculumGrade.includes("고")) return true;
+
+  return false;
+}
+
 // 검색 조건에 맞는 어휘 필터링
 export function filterVocabulary(
   criteria: SearchCriteria,
@@ -26,7 +61,9 @@ export function filterVocabulary(
   }
 
   if (criteria.vocabularyLevel) {
-    filtered = filtered.filter((v) => v.curriculumGrade === criteria.vocabularyLevel);
+    filtered = filtered.filter((v) =>
+      matchesGradeRange(criteria.vocabularyLevel!, v.curriculumGrade)
+    );
   }
 
   if (criteria.partOfSpeech && criteria.partOfSpeech.length > 0) {
@@ -210,17 +247,22 @@ const generators: Record<
 };
 
 // 메인 문제 생성 함수
-export function generateProblems(criteria: SearchCriteria): GeneratedProblem[] {
-  const filtered = filterVocabulary(criteria);
+// csvData가 제공되면 CSV 데이터를 우선 사용, 없으면 내장 샘플 데이터 사용
+export function generateProblems(
+  criteria: SearchCriteria,
+  csvData?: VocabularyItem[]
+): GeneratedProblem[] {
+  const allData = csvData && csvData.length > 0 ? csvData : vocabularyData;
+  const filtered = filterVocabulary(criteria, allData);
 
   if (filtered.length === 0) {
     // 조건에 맞는 어휘가 없으면 전체에서 선택
-    const allPool = shuffleArray(vocabularyData).slice(0, criteria.count);
-    return allPool.map((w) => generators[criteria.problemType](w, vocabularyData));
+    const allPool = shuffleArray(allData).slice(0, criteria.count);
+    return allPool.map((w) => generators[criteria.problemType](w, allData));
   }
 
   const selected = shuffleArray(filtered).slice(0, criteria.count);
   const generator = generators[criteria.problemType];
 
-  return selected.map((word) => generator(word, vocabularyData));
+  return selected.map((word) => generator(word, allData));
 }
