@@ -110,14 +110,26 @@ function ProblemCard({
 
         {/* 결과 표시 */}
         {selected && (
-          <div
-            className={`mt-3 px-4 py-2 rounded-lg text-sm ${
-              isCorrect
-                ? "bg-green-50 text-green-700"
-                : "bg-red-50 text-red-700"
-            }`}
-          >
-            {isCorrect ? "정답입니다!" : `오답! 정답: ${problem.correctAnswer}`}
+          <div className="mt-3 flex items-center gap-3">
+            <div
+              className={`flex-1 px-4 py-2 rounded-lg text-sm ${
+                isCorrect
+                  ? "bg-green-50 text-green-700"
+                  : "bg-red-50 text-red-700"
+              }`}
+            >
+              {isCorrect ? "정답입니다!" : `오답! 정답: ${problem.correctAnswer}`}
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setSelected(null);
+                setShowAnswer(false);
+              }}
+              className="px-3 py-2 text-xs font-medium text-gray-500 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer whitespace-nowrap"
+            >
+              다시 풀기
+            </button>
           </div>
         )}
 

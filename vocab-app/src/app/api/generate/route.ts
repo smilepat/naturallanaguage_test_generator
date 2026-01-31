@@ -7,9 +7,16 @@ export async function POST(request: NextRequest) {
   try {
     const { input } = await request.json();
 
-    if (!input || typeof input !== "string") {
+    if (!input || typeof input !== "string" || !input.trim()) {
       return NextResponse.json(
         { error: "입력 텍스트가 필요합니다." },
+        { status: 400 }
+      );
+    }
+
+    if (input.length > 10000) {
+      return NextResponse.json(
+        { error: "입력이 너무 깁니다. (최대 10,000자)" },
         { status: 400 }
       );
     }
@@ -21,11 +28,13 @@ export async function POST(request: NextRequest) {
     const criteria = parseNaturalLanguage(input);
 
     // 3. 조건에 맞는 문제 생성 (CSV 데이터 우선 사용)
-    const problems = generateProblems(criteria, csvData);
+    const result = generateProblems(criteria, csvData);
 
     return NextResponse.json({
       criteria,
-      problems,
+      problems: result.problems,
+      warning: result.warning,
+      filteredCount: result.filteredCount,
       dataSource: csvData.length > 0 ? `CSV (${csvData.length}개 어휘)` : "샘플 데이터",
     });
   } catch (error) {

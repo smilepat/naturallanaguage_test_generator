@@ -47,10 +47,13 @@ export function parseNaturalLanguage(input: string): SearchCriteria {
   else if (/반의어|antonym/.test(lower)) problemType = "반의어";
   else if (/철자|spell/.test(lower)) problemType = "철자맞추기";
 
-  // 문제 수 추출
+  // 문제 수 추출 (1~100 제한)
   let count = 10;
   const countMatch = korean.match(/(\d+)\s*(?:개|문제|문항|questions?)/);
-  if (countMatch) count = parseInt(countMatch[1]);
+  if (countMatch) {
+    const parsed = parseInt(countMatch[1]);
+    count = Math.min(Math.max(parsed, 1), 100);
+  }
 
   // 제외 단어 추출
   const excludeWords: string[] = [];

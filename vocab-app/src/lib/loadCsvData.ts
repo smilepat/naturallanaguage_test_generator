@@ -69,7 +69,8 @@ export function loadCsvVocabulary(): VocabularyItem[] {
     return [];
   }
 
-  const raw = fs.readFileSync(csvPath, "utf-8");
+  const rawWithBom = fs.readFileSync(csvPath, "utf-8");
+  const raw = rawWithBom.replace(/^\uFEFF/, ""); // BOM 제거
   const lines = raw.split("\n").filter((line) => line.trim().length > 0);
 
   if (lines.length < 2) return [];

@@ -14,26 +14,43 @@ export default function Home() {
   const [criteria, setCriteria] = useState<SearchCriteria | null>(null);
   const [problems, setProblems] = useState<GeneratedProblem[]>([]);
   const [error, setError] = useState<string>("");
+  const [warning, setWarning] = useState<string>("");
 
   const handleGenerate = async (input: string) => {
     setStep("loading");
     setError("");
+    setWarning("");
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000);
 
     try {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ input }),
+        signal: controller.signal,
       });
 
-      if (!res.ok) throw new Error("문제 생성에 실패했습니다.");
+      clearTimeout(timeout);
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => null);
+        throw new Error(errData?.error || "문제 생성에 실패했습니다.");
+      }
 
       const data = await res.json();
       setCriteria(data.criteria);
       setProblems(data.problems);
+      if (data.warning) setWarning(data.warning);
       setStep("result");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "오류가 발생했습니다.");
+      clearTimeout(timeout);
+      if (err instanceof DOMException && err.name === "AbortError") {
+        setError("요청 시간이 초과되었습니다. 다시 시도해주세요.");
+      } else {
+        setError(err instanceof Error ? err.message : "오류가 발생했습니다.");
+      }
       setStep("input");
     }
   };
@@ -43,6 +60,7 @@ export default function Home() {
     setCriteria(null);
     setProblems([]);
     setError("");
+    setWarning("");
   };
 
   const handleDeleteProblem = (id: string) => {
@@ -51,32 +69,18 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      {/* 헤더 */}
-      <header className="border-b border-blue-100 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">
-              V
-            </div>
-            <div>
-              <h1 className="text-lg font-bold text-gray-900">
-                어휘 문제 AI 생성기
-              </h1>
-              <p className="text-xs text-gray-500">
-                자연어로 쉽게 영어 어휘 문제를 만드세요
-              </p>
-            </div>
-          </div>
-          {step === "result" && (
-            <button
-              onClick={handleReset}
-              className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors cursor-pointer"
-            >
-              새 문제 만들기
-            </button>
-          )}
+      {/* 결과 화면에서 새 문제 만들기 버튼 */}
+      {step === "result" && (
+        <div className="max-w-5xl mx-auto px-4 pt-4 flex justify-end">
+          <button
+            type="button"
+            onClick={handleReset}
+            className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors cursor-pointer"
+          >
+            새 문제 만들기
+          </button>
         </div>
-      </header>
+      )}
 
       {/* 메인 */}
       <main className="max-w-5xl mx-auto px-4 py-8">
@@ -103,6 +107,12 @@ export default function Home() {
         {/* 결과 */}
         {step === "result" && (
           <div className="animate-fade-in space-y-6">
+            {warning && (
+              <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-700 text-sm">
+                {warning}
+              </div>
+            )}
+
             {criteria && <CriteriaDisplay criteria={criteria} />}
 
             <div className="flex items-center justify-between">
