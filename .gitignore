@@ -41,3 +41,7 @@ token.json
 tmp/
 temp/
 *.tmp
+
+# Large data files
+Copy of master_vocabulary_table*
+nul
