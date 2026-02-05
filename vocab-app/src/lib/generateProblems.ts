@@ -246,14 +246,12 @@ function generateSpelling(
   ).slice(0, hiddenCount);
   const masked = chars.map((c, i) => (indices.includes(i) ? "_" : c)).join("");
 
-  const distractors = getDistractors(word, pool, 3, "word");
-  const choices = shuffleArray([w, ...distractors]);
   return {
     id: uid(),
     type: "철자맞추기",
     word: w,
-    question: `다음 한글 뜻을 보고 올바른 철자의 단어를 고르세요.\n\n뜻: ${word.koreanDefinition}\n힌트: ${masked}`,
-    choices,
+    question: `다음 한글 뜻을 보고 올바른 철자의 단어를 입력하세요.\n\n뜻: ${word.koreanDefinition}\n힌트: ${masked}`,
+    choices: [], // 선택지 없음 -> 텍스트 입력 모드
     correctAnswer: w,
     explanation: `정답: ${w}\n뜻: ${word.koreanDefinition}`,
   };
