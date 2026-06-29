@@ -18,9 +18,11 @@ vocab-app/
 │   │   ├── ProblemList.tsx          # 생성된 문제 목록 + 인터랙션
 │   │   └── ExportButton.tsx         # PDF/텍스트 내보내기
 │   ├── data/
-│   │   └── vocabulary.ts            # Google Sheets 기반 샘플 어휘 85개
+│   │   ├── vocab.json              # 정본 어휘 data-package (9,183단어) ← 주 데이터
+│   │   └── vocabulary.ts            # 폴백 샘플 어휘 95개 (패키지 누락 시)
 │   ├── lib/
-│   │   ├── parseInput.ts            # 자연어 → 검색 조건 파싱
+│   │   ├── loadVocabData.ts         # vocab.json → VocabularyItem 로더
+│   │   ├── parseInput.ts            # 자연어 → 검색 조건 파싱 (룰 기반)
 │   │   └── generateProblems.ts      # 6가지 유형 문제 생성 엔진
 │   ├── store/
 │   │   └── useAppStore.ts           # Zustand 상태 관리
@@ -38,7 +40,7 @@ vocab-app/
 | **인터랙티브 풀기** | 선택지 클릭 시 정답/오답 즉시 표시 |
 | **해설 보기** | 각 문제별 해설 토글 |
 | **내보내기** | PDF (정답지 포함) + 텍스트 파일 다운로드 |
-| **Google Sheets 연동** | API 키 설정 시 실시간 시트 데이터 연동 가능 |
+| **정본 데이터** | efl-data-hub 어휘 data-package(9,183단어) 번들 — API 키·외부 연동 불필요 |
 
 ## 기술 스택
 
@@ -46,7 +48,6 @@ vocab-app/
 - **언어**: TypeScript
 - **스타일링**: Tailwind CSS
 - **상태 관리**: Zustand
-- **Google Sheets**: googleapis
 - **PDF 생성**: jsPDF
 
 ## 실행 방법
@@ -56,22 +57,22 @@ cd vocab-app
 npm run dev
 ```
 
-브라우저에서 `http://localhost:3000`으로 접속합니다.
+브라우저에서 `http://localhost:3000`으로 접속합니다. API 키·외부 연동 없이 바로 동작합니다.
 
-## Google Sheets 연동 설정
+## 데이터 출처 (정본 data-package)
 
-1. Google Cloud Console에서 프로젝트 생성
-2. Google Sheets API 활성화
-3. API 키 발급
-4. `vocab-app/.env.local` 파일 생성:
+어휘 데이터는 `src/data/vocab.json` 에 번들된 **정본 어휘 data-package**다.
 
-```
-GOOGLE_SHEETS_API_KEY=your_api_key_here
-```
+- 출처: `efl-data-hub/data-package/vocab/profiles/vocab-app.json`
+  (정본 `vocab-graph-db/9000word_full_db.csv@50ac6c1`, **9,183단어**)
+- 필드(9): word_display·pos·meaning_ko·definition_en·sentence_1·synonym·antonym·cefr·grade_range (+kr_curriculum 내부용)
+- 로드: `src/lib/loadVocabData.ts` 가 JSON을 읽어 `VocabularyItem[]` 으로 변환
+- 폴백: 패키지 누락 시 `src/data/vocabulary.ts`(95개 샘플)
 
-5. Google Sheets를 "링크가 있는 모든 사용자 - 뷰어"로 공유 설정
+> 갱신: efl-data-hub에서 `python scripts/export_vocab_package.py` 재실행 후
+> `profiles/vocab-app.json` 을 이 앱의 `src/data/vocab.json` 으로 복사.
 
-API 키가 없으면 내장된 샘플 어휘 데이터(85개)로 동작합니다.
+> ⚠️ `api/sheets/route.ts`(Google Sheets)는 초기 실험 잔재이며 현재 데이터 경로에서 미사용.
 
 ## 지원하는 자연어 입력 예시
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { parseNaturalLanguage } from "@/lib/parseInput";
 import { generateProblems } from "@/lib/generateProblems";
-import { loadCsvVocabulary } from "@/lib/loadCsvData";
+import { loadVocabulary } from "@/lib/loadVocabData";
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,21 +21,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 1. CSV 데이터 로드
-    const csvData = loadCsvVocabulary();
+    // 1. 정본 어휘 data-package 로드 (efl-data-hub @ vocab-graph-db 50ac6c1)
+    const vocab = loadVocabulary();
 
     // 2. 자연어 파싱 → 검색 조건
     const criteria = parseNaturalLanguage(input);
 
-    // 3. 조건에 맞는 문제 생성 (CSV 데이터 우선 사용)
-    const result = generateProblems(criteria, csvData);
+    // 3. 조건에 맞는 문제 생성
+    const result = generateProblems(criteria, vocab);
 
     return NextResponse.json({
       criteria,
       problems: result.problems,
       warning: result.warning,
       filteredCount: result.filteredCount,
-      dataSource: csvData.length > 0 ? `CSV (${csvData.length}개 어휘)` : "샘플 데이터",
+      dataSource: vocab.length > 0 ? `정본 data-package (${vocab.length}개 어휘)` : "샘플 데이터",
     });
   } catch (error) {
     console.error("문제 생성 오류:", error);

@@ -56,9 +56,24 @@
 - **Phase 3**: 부가 기능 (4주)
 - **Phase 4**: 완성 및 배포 (2주)
 
+## 현재 구현 상태 (2026-06)
+
+이 README의 일부(LLM/Google Sheets 연동)는 **초기 기획(PRD) 비전**이다. 실제 동작하는 것은 **어휘 문제 생성기**(`vocab-app/`)다:
+
+- **자연어 입력 → 룰 기반 파서**(`parseInput.ts`, 정규식): 학년·CEFR·품사·유형·개수 추출. (LLM 미사용)
+- **6가지 문제 유형** 생성: 객관식·빈칸채우기·영영풀이·동의어·반의어·철자맞추기.
+- **데이터 = 정본 어휘 data-package(9,183단어)** 번들. 출처 `efl-data-hub` (정본 `vocab-graph-db/9000word_full_db.csv@50ac6c1`). **API 키·외부 연동 불필요.**
+- 수능 문항 검색(`search/`)은 룰 파서 + 목업 데이터(`csat_mock.ts`) 단계 — 실제 수능 DB 연결은 미완.
+
+자세한 구조·실행·데이터 갱신은 [PROJECT_GUIDE.md](./PROJECT_GUIDE.md) 참조.
+
 ## 시작하기
 
-> 현재 개발 중입니다. 개발 환경 설정 방법은 추후 업데이트 예정입니다.
+```bash
+cd vocab-app
+npm install
+npm run dev   # http://localhost:3000
+```
 
 ## 라이선스
 
