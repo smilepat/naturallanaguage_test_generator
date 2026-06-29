@@ -50,7 +50,6 @@ function ProblemCard({
   const choiceLabels = ["\u2460", "\u2461", "\u2462", "\u2463"];
 
   return (
-  return (
     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden animate-fade-in shadow-sm hover:shadow-md transition-shadow">
       {/* 헤더 */}
       <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-100">
